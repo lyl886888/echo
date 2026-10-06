@@ -1,0 +1,36 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unzip source
+        run: unzip -q echo-master.zip
+
+      - name: Build Xcode project
+        run: |
+          xcodebuild build \
+            -project *.xcodeproj \
+            -scheme echo \
+            -configuration Release \
+            -derivedDataPath build/DerivedData
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/DerivedData/Build/Archives/*.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist exportOptions.plist
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-ipa
+          path: build/ipa/*.ipa
